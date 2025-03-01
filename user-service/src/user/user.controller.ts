@@ -31,6 +31,7 @@ export class UserController {
     async me(@Req() req: Request, @Res() res: Response) {
         try {
 
+            console.log("Cookie:", (req.cookies as any));
             const token = req.cookies.token;
 
             if (!token) {
