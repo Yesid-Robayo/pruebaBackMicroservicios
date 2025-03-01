@@ -1,0 +1,123 @@
+services:
+  user-db:
+    container_name: user-db
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: yesid
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: user_db
+    volumes:
+      - user-db-data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yesid -d user_db"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+  order-db:
+    container_name: order-db
+    image: postgres:latest
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: yesid
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: order_db
+    
+    volumes:
+      - order-db-data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U yesid -d order_db"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s
+
+  
+  zookeeper:
+    container_name: zookeeper
+    image: bitnami/zookeeper:latest
+    environment:
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+    networks:
+      - microservices-network
+  
+  kafka:
+    container_name: kafka
+    image: bitnami/kafka:latest
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: true
+    ports:
+      - "9092:9092"
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "kafka-topics.sh", "--list", "--bootstrap-server", "kafka:9092"]
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 30s 
+
+  user-service:
+    container_name: user-service
+    build: 
+      context: ./user-service
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"
+    networks:
+      - microservices-network
+    depends_on:
+      user-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    command: sh -c "sleep 5 && npx prisma migrate deploy && npm run start:prod"
+
+  order-service:
+    container_name: order-service
+    build: 
+      context: ./order-service
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3000"
+    networks:
+      - microservices-network
+    depends_on:
+      user-service:
+        condition: service_started
+      order-db:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    command: sh -c "sleep 5 && npx prisma migrate deploy && npm run start:prod"
+
+networks:
+  microservices-network:
+    driver: bridge
+
+volumes:
+  user-db-data:
+  order-db-data:
+    
+
+
+
+
+    
+
+  
