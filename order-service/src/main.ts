@@ -22,7 +22,7 @@ async function bootstrap() {
     .setTitle('Order Service')
     .setDescription('The order service API description - requires authentication to access all endpoints')
     .setVersion('1.0')
-    .addTag('')
+    .addTag('Order')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
@@ -30,6 +30,8 @@ async function bootstrap() {
 
 
   await app.listen(process.env.PORT ?? 3000);
+
+  console.log(`Application is running on: ${await app.getUrl()}`);
 
 }
 bootstrap();
