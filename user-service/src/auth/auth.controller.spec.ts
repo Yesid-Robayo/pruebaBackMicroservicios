@@ -2,68 +2,92 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import * as request from 'supertest';
-import { INestApplication } from '@nestjs/common';
+import { Response } from 'express';
 
 describe('AuthController', () => {
-  let app: INestApplication;
-  let authService: AuthService;
+    let authController: AuthController;
+    let authService: AuthService;
 
-  beforeAll(async () => {
-    const moduleRef: TestingModule = await Test.createTestingModule({
-      controllers: [AuthController],
-      providers: [
-        {
-          provide: AuthService,
-          useValue: {
-            login: jest.fn().mockResolvedValue('mocked-token'),
-          },
-        },
-      ],
-    }).compile();
+    beforeEach(async () => {
+        const module: TestingModule = await Test.createTestingModule({
+            controllers: [AuthController],
+            providers: [
+                {
+                    provide: AuthService,
+                    useValue: {
+                        login: jest.fn(),
+                    },
+                },
+            ],
+        }).compile();
 
-    app = moduleRef.createNestApplication();
-    await app.init();
-    authService = moduleRef.get<AuthService>(AuthService);
-  });
-
-  afterAll(async () => {
-    await app.close();
-  });
-
-  describe('POST /auth/login', () => {
-    it('should login successfully and set cookie', async () => {
-      const loginDto: LoginDto = { email: 'test@example.com', password: 'password123' };
-
-      const response = await request(app.getHttpServer())
-        .post('/auth/login')
-        .send(loginDto)
-        .expect(200);
-
-      expect(response.body).toEqual({ code: 200, message: 'Login successful' });
-      expect(response.headers['set-cookie']).toBeDefined();
+        authController = module.get<AuthController>(AuthController);
+        authService = module.get<AuthService>(AuthService);
     });
 
-    it('should return 401 if login fails', async () => {
-      jest.spyOn(authService, 'login').mockRejectedValueOnce(new Error('Unauthorized'));
+    describe('login', () => {
+        it('should return 200 and set cookie on successful login', async () => {
+            const loginDto: LoginDto = {
+                email: 'yesid.robayo@example.com',
+                password: 'yesid123',
+            };
 
-      const loginDto: LoginDto = { email: 'wrong@example.com', password: 'wrongpass' };
+            const mockToken = 'mockToken';
+            const mockResponse = {
+                cookie: jest.fn(),
+                status: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as unknown as Response;
 
-      const response = await request(app.getHttpServer())
-        .post('/auth/login')
-        .send(loginDto)
-        .expect(401);
+            jest.spyOn(authService, 'login').mockResolvedValue(mockToken);
 
-      expect(response.body).toEqual({ code: 401, message: 'Unauthorized' });
+            await authController.login(loginDto, mockResponse);
+
+            expect(authService.login).toHaveBeenCalledWith(loginDto.email, loginDto.password);
+            expect(mockResponse.cookie).toHaveBeenCalledWith('token', mockToken, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'strict',
+                maxAge: 60 * 60 * 1000,
+            });
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith({ code: 200, message: 'Login successful' });
+        });
+
+        it('should return 401 on failed login', async () => {
+            const loginDto: LoginDto = {
+                email: 'yesid.robayo@example.com',
+                password: 'wrongpassword',
+            };
+
+            const mockResponse = {
+                status: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as unknown as Response;
+
+            jest.spyOn(authService, 'login').mockRejectedValue(new Error('Unauthorized'));
+
+            await authController.login(loginDto, mockResponse);
+
+            expect(authService.login).toHaveBeenCalledWith(loginDto.email, loginDto.password);
+            expect(mockResponse.status).toHaveBeenCalledWith(401);
+            expect(mockResponse.json).toHaveBeenCalledWith({ code: 401, message: 'Unauthorized' });
+        });
     });
-  });
 
-  describe('POST /auth/logout', () => {
-    it('should clear the token cookie and return 200', async () => {
-      const response = await request(app.getHttpServer()).post('/auth/logout').expect(200);
-      
-      expect(response.body).toEqual({ code: 200, message: 'Logout successful' });
-      expect(response.headers['set-cookie']).toBeDefined();
+    describe('logout', () => {
+        it('should clear the token cookie and return 200', async () => {
+            const mockResponse = {
+                clearCookie: jest.fn(),
+                status: jest.fn().mockReturnThis(),
+                json: jest.fn(),
+            } as unknown as Response;
+
+            await authController.logout(mockResponse);
+
+            expect(mockResponse.clearCookie).toHaveBeenCalledWith('token');
+            expect(mockResponse.status).toHaveBeenCalledWith(200);
+            expect(mockResponse.json).toHaveBeenCalledWith({ code: 200, message: 'Logout successful' });
+        });
     });
-  });
 });

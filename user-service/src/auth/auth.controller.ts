@@ -26,7 +26,6 @@ export class AuthController {
             });
             return res.status(200).json({ code: 200, message: 'Login successful' });
         } catch (err) {
-            console.log(err);
             return res.status(401).json({ code: 401, message: 'Unauthorized' });
         }
     }
@@ -34,7 +33,6 @@ export class AuthController {
     @Post('logout')
     @ApiOperation({ summary: 'Logout' })
     @ApiResponse({ status: 200, description: 'Logout successful' })
-    @ApiResponse({ status: 401, description: 'Unauthorized' })
     async logout(@Res() res: Response) {
 
         res.clearCookie('token');

@@ -3,11 +3,13 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderDTO } from './dto/create-order.dto';
 import { Request } from 'express';
 import { OrderStatus } from '@prisma/client';
+import { KafkaService } from 'src/kafka/kafka.service';
 
 @Injectable()
 export class OrderService {
 
-    constructor(private readonly prismaService: PrismaService
+    constructor(private readonly prismaService: PrismaService,
+        private readonly kafkaService: KafkaService
     ) { }
 
     async createOrder(data: CreateOrderDTO) {
@@ -21,10 +23,10 @@ export class OrderService {
         });
     }
 
-    async getOrdersById(req: Request) {
+    async getOrdersById(id: string) {
         return this.prismaService.order.findMany({
             where: {
-                userId: Number(req.params.id)
+                userId: Number(id)
             },
             orderBy: {
                 createdAt: 'desc'
@@ -32,10 +34,17 @@ export class OrderService {
         });
     }
 
-    async updateOrderStatus(orderId: number, status: OrderStatus) {
+    async updateOrderStatus(orderId: string, status: OrderStatus, token: string) {
+        const response = await this.kafkaService.sendAndReceive('check_user_is_admin', { token }, 'check_user_is_admin_response', 5000);
+        if (!response || !response.isAdmin) {
+            throw new Error('User is not admin');
+        }
+        if (!Object.values(OrderStatus).includes(status)) {
+            throw new Error('Invalid order status');
+        }
         return this.prismaService.order.update({
             where: {
-                id: orderId
+                id: Number(orderId)
             },
             data: {
                 status

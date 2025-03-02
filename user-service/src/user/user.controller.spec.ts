@@ -1,23 +1,16 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UserController } from './user.controller';
-import { UserService } from './user.service';
+import { UserService } from '../user-validation/user.service';
 import { AuthService } from '../auth/auth.service';
 import { CreateUserDto } from './dto/create.user.dto';
-import { Response } from 'express';
-import { Role } from 'src/utils/enum/enum';
-
+import { UserResponseDto } from './dto/user.response.dto';
+import { Request, Response } from 'express';
+import { Role } from '@prisma/client';
 
 describe('UserController', () => {
-  let userController: UserController;
+  let controller: UserController;
   let userService: UserService;
   let authService: AuthService;
-
-  const mockResponse = () => {
-    const res: Partial<Response> = {};
-    res.status = jest.fn().mockReturnValue(res);
-    res.json = jest.fn().mockReturnValue(res);
-    return res as Response;
-  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -39,133 +32,191 @@ describe('UserController', () => {
       ],
     }).compile();
 
-    userController = module.get<UserController>(UserController);
+    controller = module.get<UserController>(UserController);
     userService = module.get<UserService>(UserService);
     authService = module.get<AuthService>(AuthService);
+  });
+
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
   });
 
   describe('createUser', () => {
     it('should create a user successfully', async () => {
       const createUserDto: CreateUserDto = {
-        email: 'test@example.com',
-        password: 'password123',
-        name: 'Test User',
+        email: 'yesid.robayo@example.com',
+        password: 'yesid123',
+        name: 'Yesid Robayo',
         role: Role.USER,
       };
-      const mockRes = mockResponse();
 
-      (userService.createUser as jest.Mock).mockResolvedValue({
-        code: 201,
-        message: 'User created successfully',
-      });
+      const result = { code: 201, message: 'User created successfully' };
+      jest.spyOn(userService, 'createUser').mockResolvedValue(result);
 
-      await userController.createUser(createUserDto, mockRes);
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as Response;
+
+      await controller.createUser(createUserDto, res);
 
       expect(userService.createUser).toHaveBeenCalledWith(createUserDto);
-      expect(mockRes.status).toHaveBeenCalledWith(201);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        code: 201,
-        message: 'User created successfully',
-      });
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(result);
+    });
+
+    it('should handle invalid role', async () => {
+      const createUserDto: CreateUserDto = {
+        email: 'yesid.robayo@example.com',
+        password: 'yesid123',
+        name: 'Yesid Robayo',
+        role: 'INVALID_ROLE' as Role,
+      };
+
+      jest.spyOn(userService, 'createUser').mockRejectedValue(new Error('Invalid role'));
+
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as Response;
+
+      await controller.createUser(createUserDto, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ code: 400, message: 'Invalid role only ADMIN - USER' });
+    });
+
+    it('should handle email already exists', async () => {
+      const createUserDto: CreateUserDto = {
+        email: 'yesid.robayo@example.com',
+        password: 'yesid123',
+        name: 'Yesid Robayo',
+        role: 'USER',
+      };
+
+      jest.spyOn(userService, 'createUser').mockRejectedValue(new Error('Email already exists'));
+
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as Response;
+
+      await controller.createUser(createUserDto, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith({ code: 400, message: 'Email already exists' });
     });
 
     it('should handle internal server error', async () => {
       const createUserDto: CreateUserDto = {
-        email: 'test@example.com',
-        password: 'password123',
-        name: 'Test User',
-        role: Role.USER,
+        email: 'yesid.robayo@example.com',
+        password: 'yesid123',
+        name: 'Yesid Robayo',
+        role: 'USER',
       };
-      const mockRes = mockResponse();
 
-      (userService.createUser as jest.Mock).mockRejectedValue(new Error('Database error'));
+      jest.spyOn(userService, 'createUser').mockRejectedValue(new Error('Internal server error'));
 
-      await userController.createUser(createUserDto, mockRes);
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as Response;
 
-      expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        code: 500,
-        message: 'Internal server error',
-      });
+      await controller.createUser(createUserDto, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ code: 500, message: 'Internal server error' });
     });
   });
 
   describe('me', () => {
-    it('should return user information if authenticated', async () => {
-      const mockReq = {
-        cookies: { token: 'valid-token' },
-      } as any;
-      const mockRes = mockResponse();
-
-      (authService.verifyToken as jest.Mock).mockResolvedValue({ userId: 1 });
-      (userService.findById as jest.Mock).mockResolvedValue({
+    it('should return user information', async () => {
+      const token = 'valid-token';
+      const decoded = { userId: 1 };
+      const user: UserResponseDto = {
         id: 1,
-        email: 'test@example.com',
-        name: 'Test User',
-      });
+        email: 'yesid.robayo@example.com',
+        name: 'Yesid Robayo',
+        role: 'USER',
+        updatedAt: new Date(),
+        createdAt: new Date(),
+      };
 
-      await userController.me(mockReq, mockRes);
+      jest.spyOn(authService, 'verifyToken').mockResolvedValue(decoded);
+      jest.spyOn(userService, 'findById').mockResolvedValue(user);
 
-      expect(authService.verifyToken).toHaveBeenCalledWith('valid-token');
-      expect(userService.findById).toHaveBeenCalledWith(1);
-      expect(mockRes.status).toHaveBeenCalledWith(200);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        code: 200,
-        data: {
-          id: 1,
-          email: 'test@example.com',
-          name: 'Test User',
-        },
-      });
+      const req = {
+        cookies: { token },
+      } as unknown as Request;
+
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as Response;
+
+      await controller.me(req, res);
+
+      expect(authService.verifyToken).toHaveBeenCalledWith(token);
+      expect(userService.findById).toHaveBeenCalledWith(decoded.userId);
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith({ code: 200, data: user });
     });
 
-    it('should return 401 if no token is provided', async () => {
-      const mockReq = {
+    it('should handle unauthorized when token is missing', async () => {
+      const req = {
         cookies: {},
-      } as any;
-      const mockRes = mockResponse();
+      } as unknown as Request;
 
-      await userController.me(mockReq, mockRes);
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as Response;
 
-      expect(mockRes.status).toHaveBeenCalledWith(401);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        code: 401,
-        message: 'Unauthorized',
-      });
+      await controller.me(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ code: 401, message: 'Unauthorized' });
     });
 
-    it('should return 401 if token verification fails', async () => {
-      const mockReq = {
-        cookies: { token: 'invalid-token' },
-      } as any;
-      const mockRes = mockResponse();
+    it('should handle unauthorized when token is invalid', async () => {
+      const token = 'invalid-token';
 
+      jest.spyOn(authService, 'verifyToken').mockResolvedValue(null);
 
-      await userController.me(mockReq, mockRes);
-     
-      expect(mockRes.status).toHaveBeenCalledWith(401);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        code: 401,
-        message: 'Unauthorized',
-      });
+      const req = {
+        cookies: { token },
+      } as unknown as Request;
+
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as Response;
+
+      await controller.me(req, res);
+
+      expect(authService.verifyToken).toHaveBeenCalledWith(token);
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res.json).toHaveBeenCalledWith({ code: 401, message: 'Unauthorized' });
     });
 
     it('should handle internal server error', async () => {
-      const mockReq = {
-        cookies: { token: 'valid-token' },
-      } as any;
-      const mockRes = mockResponse();
+      const token = 'valid-token';
 
-      (authService.verifyToken as jest.Mock).mockResolvedValue({ userId: 1 });
-      (userService.findById as jest.Mock).mockRejectedValue(new Error('Database error'));
+      jest.spyOn(authService, 'verifyToken').mockRejectedValue(new Error('Internal server error'));
 
-      await userController.me(mockReq, mockRes);
+      const req = {
+        cookies: { token },
+      } as unknown as Request;
 
-      expect(mockRes.status).toHaveBeenCalledWith(500);
-      expect(mockRes.json).toHaveBeenCalledWith({
-        code: 500,
-        message: 'Internal server error',
-      });
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn(),
+      } as unknown as Response;
+
+      await controller.me(req, res);
+
+      expect(res.status).toHaveBeenCalledWith(500);
+      expect(res.json).toHaveBeenCalledWith({ code: 500, message: 'Internal server error' });
     });
   });
 });

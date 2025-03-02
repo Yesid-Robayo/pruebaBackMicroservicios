@@ -1,82 +1,122 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from 'src/user/user.service';
-import { Role } from 'src/utils/enum/enum';
+import { UserService } from 'src/user-validation/user.service';
+import { AuthService } from './auth.service';
+import { Role } from '@prisma/client';
 
 describe('AuthService', () => {
-  let authService: AuthService;
-  let jwtService: JwtService;
-  let userService: UserService;
+    let authService: AuthService;
+    let jwtService: JwtService;
+    let userService: UserService;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AuthService,
-        {
-          provide: JwtService,
-          useValue: {
-            sign: jest.fn().mockReturnValue('mocked-jwt-token'),
-            verify: jest.fn().mockImplementation((token) => {
-              if (token === 'valid-token') return { userId: 1, role: Role.USER };
-              if (token === 'expired-token') throw { name: 'TokenExpiredError' };
-              if (token === 'invalid-token') throw { name: 'JsonWebTokenError' };
-              throw new Error('Unknown error');
-            }),
-          },
-        },
-        {
-          provide: UserService,
-          useValue: {
-            validateUser: jest.fn().mockImplementation((email, password) => {
-              if (email === 'valid@example.com' && password === 'password123') {
-                return { id: 1, role: Role.USER };
-              }
-              return null;
-            }),
-          },
-        },
-      ],
-    }).compile();
+    beforeEach(async () => {
+        const module: TestingModule = await Test.createTestingModule({
+            providers: [
+                AuthService,
+                {
+                    provide: JwtService,
+                    useValue: {
+                        sign: jest.fn(),
+                        verify: jest.fn(),
+                    },
+                },
+                {
+                    provide: UserService,
+                    useValue: {
+                        validateUser: jest.fn(),
+                    },
+                },
+            ],
+        }).compile();
 
-    authService = module.get<AuthService>(AuthService);
-    jwtService = module.get<JwtService>(JwtService);
-    userService = module.get<UserService>(UserService);
-  });
-
-  describe('generateToken', () => {
-    it('should return a JWT token', () => {
-      const token = authService.generateToken(1, Role.USER);
-      expect(token).toBe('mocked-jwt-token');
-    });
-  });
-
-  describe('verifyToken', () => {
-    it('should return payload for a valid token', () => {
-      expect(authService.verifyToken('valid-token')).toEqual({ userId: 1, role: Role.USER });
+        authService = module.get<AuthService>(AuthService);
+        jwtService = module.get<JwtService>(JwtService);
+        userService = module.get<UserService>(UserService);
     });
 
-    it('should throw "Token expired" error for expired token', () => {
-      expect(() => authService.verifyToken('expired-token')).toThrow('Token expired');
+    describe('generateToken', () => {
+        it('should generate a token with the correct payload', () => {
+            const userId = 1;
+            const role = Role.USER;
+            const mockToken = 'mockToken';
+
+            jest.spyOn(jwtService, 'sign').mockReturnValue(mockToken);
+
+            const result = authService.generateToken(userId, role);
+
+            expect(jwtService.sign).toHaveBeenCalledWith({ userId, role });
+            expect(result).toBe(mockToken);
+        });
     });
 
-    it('should throw "Invalid token" error for invalid token', () => {
-      expect(() => authService.verifyToken('invalid-token')).toThrow('Invalid token');
+    describe('verifyToken', () => {
+        it('should verify a valid token', () => {
+            const mockToken = 'mockToken';
+            const mockPayload = { userId: 1, role: Role.USER };
+
+            jest.spyOn(jwtService, 'verify').mockReturnValue(mockPayload);
+
+            const result = authService.verifyToken(mockToken);
+
+            expect(jwtService.verify).toHaveBeenCalledWith(mockToken);
+            expect(result).toEqual(mockPayload);
+        });
+
+        it('should throw an error if the token is expired', () => {
+            const mockToken = 'expiredToken';
+
+            jest.spyOn(jwtService, 'verify').mockImplementation(() => {
+                throw { name: 'TokenExpiredError' };
+            });
+
+            expect(() => authService.verifyToken(mockToken)).toThrow('Token expired');
+        });
+
+        it('should throw an error if the token is invalid', () => {
+            const mockToken = 'invalidToken';
+
+            jest.spyOn(jwtService, 'verify').mockImplementation(() => {
+                throw { name: 'JsonWebTokenError' };
+            });
+
+            expect(() => authService.verifyToken(mockToken)).toThrow('Invalid token');
+        });
+
+        it('should throw a generic error if token verification fails', () => {
+            const mockToken = 'invalidToken';
+
+            jest.spyOn(jwtService, 'verify').mockImplementation(() => {
+                throw new Error('Token verification failed');
+            });
+
+            expect(() => authService.verifyToken(mockToken)).toThrow('Token verification failed');
+        });
     });
 
-    it('should throw "Token verification failed" for unknown errors', () => {
-      expect(() => authService.verifyToken('unknown-token')).toThrow('Token verification failed');
-    });
-  });
+    describe('login', () => {
+        it('should return a token if login is successful', async () => {
+            const email = 'yesid.robayo@example.com';
+            const password = 'yesid123';
+            const mockUser = { id: 1, role: Role.USER, email: 'test@example.com', name: 'Test User', updatedAt: new Date(), createdAt: new Date() };
+            const mockToken = 'mockToken';
 
-  describe('login', () => {
-    it('should return a token for valid credentials', async () => {
-      const token = await authService.login('valid@example.com', 'password123');
-      expect(token).toBe('mocked-jwt-token');
-    });
+            jest.spyOn(userService, 'validateUser').mockResolvedValue(mockUser);
+            jest.spyOn(authService, 'generateToken').mockReturnValue(mockToken);
 
-    it('should throw "Invalid password" for incorrect credentials', async () => {
-      await expect(authService.login('invalid@example.com', 'wrongpassword')).rejects.toThrow('Invalid password');
+            const result = await authService.login(email, password);
+
+            expect(userService.validateUser).toHaveBeenCalledWith(email, password);
+            expect(authService.generateToken).toHaveBeenCalledWith(mockUser.id, mockUser.role);
+            expect(result).toBe(mockToken);
+        });
+
+        it('should throw an error if the password is invalid', async () => {
+            const email = 'yesid.robayo@example.com';
+            const password = 'wrongpassword';
+
+            jest.spyOn(userService, 'validateUser').mockResolvedValue(null);
+
+            await expect(authService.login(email, password)).rejects.toThrow('Invalid password');
+        });
     });
-  });
 });

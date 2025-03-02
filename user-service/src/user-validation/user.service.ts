@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateUserDto } from './dto/create.user.dto';
+import { CreateUserDto } from '../user/dto/create.user.dto';
 import * as argon2 from 'argon2';
-import { ResponseDTO } from 'src/utils/response.dto';
-import { UserResponseDto } from './dto/user.response.dto';
-import { Role } from 'src/utils/enum/enum';
+import { ResponseDTO } from 'src/utils/dto/response.dto';
+import { UserResponseDto } from '../user/dto/user.response.dto';
+import { Role } from '@prisma/client';
 @Injectable()
 export class UserService {
     constructor(private readonly prismaService: PrismaService) { }
@@ -12,7 +12,7 @@ export class UserService {
     async createUser(createUser: CreateUserDto): Promise<ResponseDTO> {
         const { email, password, name, role } = createUser;
         if (!Object.values(Role).includes(role)) {
-            throw new Error('Invalid role. Only USER and ADMIN are allowed.');
+            throw new Error('Invalid role');
         }
         const existUser = await this.prismaService.user.findUnique({
             where: {
@@ -66,6 +66,7 @@ export class UserService {
             email: user.email,
             name: user.name,
             role: user.role as Role,
+            updatedAt: user.updatedAt,
             createdAt: user.createdAt
         };
     }
@@ -81,6 +82,7 @@ export class UserService {
             email: user.email,
             name: user.name,
             role: user.role as Role,
+            updatedAt: user.updatedAt,
             createdAt: user.createdAt
         }
     }
@@ -97,6 +99,7 @@ export class UserService {
             email: user.email,
             name: user.name,
             role: user.role as Role,
+            updatedAt: user.updatedAt,
             createdAt: user.createdAt
         }
     }

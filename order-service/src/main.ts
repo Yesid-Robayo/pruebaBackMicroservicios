@@ -20,7 +20,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Order Service')
-    .setDescription('The order service API description')
+    .setDescription('The order service API description - requires authentication to access all endpoints')
     .setVersion('1.0')
     .addTag('')
     .build();

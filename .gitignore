@@ -1,7 +1,10 @@
-
+# Order service
 /order-service/dist
 /order-service/node_modules
 
+.vscode
+.idea
 
+# User service
 /user-service/dist
 /user-service/node_modules

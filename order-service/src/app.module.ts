@@ -19,8 +19,7 @@ export class AppModule {
     consumer
       .apply(TokenValidationMiddleware)
       .forRoutes(
-        { path: '/order/createOrder', method: RequestMethod.POST },
-        { path: '/order/getOrdersById/:id', method: RequestMethod.GET },
+        '*'
       )
   }
 }
