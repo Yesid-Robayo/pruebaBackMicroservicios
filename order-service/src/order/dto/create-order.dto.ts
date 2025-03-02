@@ -2,6 +2,9 @@ import { ApiProperty } from "@nestjs/swagger";
 import { OrderStatus } from "@prisma/client";
 import { IsNotEmpty, IsNumber, IsString } from "class-validator";
 
+/**
+ * Data Transfer Object for creating an order.
+ */
 export class CreateOrderDTO {
     @ApiProperty({
         description: 'total amount of the order',

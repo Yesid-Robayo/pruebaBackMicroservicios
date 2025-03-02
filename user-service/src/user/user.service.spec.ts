@@ -3,7 +3,6 @@ import { UserService } from '../user-validation/user.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/create.user.dto';
 import * as argon2 from 'argon2';
-import { UserResponseDto } from './dto/user.response.dto';
 import { Role } from '@prisma/client';
 
 describe('UserService', () => {
@@ -11,6 +10,12 @@ describe('UserService', () => {
   let prismaService: PrismaService;
 
   beforeEach(async () => {
+    /**
+     * Creates a testing module for the UserService with a mocked PrismaService.
+     * The PrismaService mock includes `findUnique` and `create` methods.
+     * 
+     * @returns {Promise<TestingModule>} A promise that resolves to the compiled testing module.
+     */
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,

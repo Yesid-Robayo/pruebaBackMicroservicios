@@ -11,6 +11,18 @@ describe('OrderController', () => {
     let orderService: OrderService;
 
     beforeEach(async () => {
+        /**
+         * Creates a testing module for the OrderController with a mocked OrderService.
+         * 
+         * The testing module includes:
+         * - `OrderController` as the controller to be tested.
+         * - `OrderService` as a provider with mocked methods:
+         *   - `createOrder`: A jest mock function for creating orders.
+         *   - `getOrdersById`: A jest mock function for retrieving orders by ID.
+         *   - `updateOrderStatus`: A jest mock function for updating the status of an order.
+         * 
+         * @returns {Promise<TestingModule>} A promise that resolves to the compiled testing module.
+         */
         const module: TestingModule = await Test.createTestingModule({
             controllers: [OrderController],
             providers: [

@@ -2,6 +2,10 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { Kafka, Consumer, Producer, logLevel, EachMessagePayload } from 'kafkajs';
 
+/**
+ * KafkaService class provides methods to interact with Kafka, including producing and consuming messages,
+ * as well as implementing a request-response pattern.
+ */
 @Injectable()
 export class KafkaService implements OnModuleInit, OnModuleDestroy {
   private kafka: Kafka;
@@ -9,30 +13,45 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
   private consumers: Map<string, Consumer> = new Map();
   private responseHandlers: Map<string, Map<string, Function>> = new Map();
 
+  /**
+   * Constructor initializes Kafka client and producer.
+   */
   constructor() {
     this.kafka = new Kafka({
-      clientId: process.env.KAFKA_CLIENT_ID || 'user-service',
+      clientId: process.env.KAFKA_CLIENT_ID || 'order-service',
       brokers: (process.env.KAFKA_BROKERS || 'localhost:9092').split(','),
       logLevel: logLevel.ERROR,
     });
-
     this.producer = this.kafka.producer();
   }
 
+  /**
+   * Lifecycle hook that is called when the module is initialized.
+   * Connects the Kafka producer.
+   */
   async onModuleInit() {
     await this.producer.connect();
   }
 
+  /**
+   * Lifecycle hook that is called when the module is destroyed.
+   * Disconnects the Kafka producer and all consumers.
+   */
   async onModuleDestroy() {
     await this.producer.disconnect();
 
-    // Desconectar todos los consumidores
+    // Disconnect all consumers
     for (const consumer of this.consumers.values()) {
       await consumer.disconnect();
     }
   }
 
-  // Método genérico para enviar mensajes
+  /**
+   * Sends a message to a specified Kafka topic.
+   * @param topic - The Kafka topic to send the message to.
+   * @param message - The message to send.
+   * @param correlationId - Optional correlation ID for the message.
+   */
   async sendMessage(topic: string, message: any, correlationId?: string): Promise<void> {
     await this.producer.send({
       topic,
@@ -45,13 +64,20 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  // Método para request-response pattern
+  /**
+   * Sends a message to a request topic and waits for a response on a response topic.
+   * @param requestTopic - The Kafka topic to send the request message to.
+   * @param message - The request message to send.
+   * @param responseTopic - The Kafka topic to listen for the response message.
+   * @param timeout - Optional timeout in milliseconds to wait for the response. Default is 10000ms.
+   * @returns A promise that resolves with the response message.
+   */
   async sendAndReceive(requestTopic: string, message: any, responseTopic: string, timeout = 10000): Promise<any> {
     const correlationId = Date.now().toString();
 
-    // Crear una promesa que se resolverá cuando llegue la respuesta
+    // Create a promise that will resolve when the response arrives
     const responsePromise = new Promise((resolve, reject) => {
-      // Guardar el handler para esta petición específica
+      // Save the handler for this specific request
       if (!this.responseHandlers.has(responseTopic)) {
         this.responseHandlers.set(responseTopic, new Map());
       }
@@ -60,7 +86,7 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
         responseHandler.set(correlationId, resolve);
       }
 
-      // Configurar timeout
+      // Set up timeout
       setTimeout(() => {
         if (this.responseHandlers.get(responseTopic)?.has(correlationId)) {
           this.responseHandlers.get(responseTopic)?.delete(correlationId);
@@ -69,19 +95,22 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
       }, timeout);
     });
 
-    // Asegurarse de que hay un consumidor para el topic de respuesta
+    // Ensure there is a consumer for the response topic
     if (!this.consumers.has(responseTopic)) {
       await this.subscribeToResponseTopic(responseTopic);
     }
 
-    // Enviar el mensaje con el correlationId
+    // Send the message with the correlationId
     await this.sendMessage(requestTopic, message, correlationId);
 
-    // Esperar la respuesta
+    // Wait for the response
     return responsePromise;
   }
 
-  // Suscribirse a un topic para respuestas
+  /**
+   * Subscribes to a Kafka topic to listen for response messages.
+   * @param topic - The Kafka topic to subscribe to.
+   */
   private async subscribeToResponseTopic(topic: string): Promise<void> {
     const consumer = this.kafka.consumer({
       groupId: `response-consumer-${topic}-${Date.now()}`,
@@ -96,7 +125,7 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
         const correlationId = message.headers?.correlationId?.toString();
         const responseData = message.value ? JSON.parse(message.value.toString()) : null;
 
-        // Si hay un handler registrado para este correlationId, llamarlo
+        // If there is a handler registered for this correlationId, call it
         if (correlationId && this.responseHandlers.has(topic)) {
           const responseHandler = this.responseHandlers.get(topic);
           if (responseHandler && responseHandler.has(correlationId)) {
@@ -115,7 +144,13 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
     this.consumers.set(topic, consumer);
   }
 
-  // Método para crear un consumidor genérico
+  /**
+   * Creates a generic Kafka consumer.
+   * @param topic - The Kafka topic to consume messages from.
+   * @param groupId - The consumer group ID.
+   * @param handler - The handler function to process each message.
+   * @param autoResponse - Optional configuration for automatic response. If provided, the consumer will send a response to the specified topic.
+   */
   async createConsumer(topic: string, groupId: string,
     handler: (payload: any) => Promise<any>,
     autoResponse?: { topic: string }): Promise<void> {
@@ -130,10 +165,10 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
           const payload = message.value ? JSON.parse(message.value.toString()) : null;
           const correlationId = message.headers?.correlationId?.toString();
 
-          // Procesar el mensaje con el handler proporcionado
+          // Process the message with the provided handler
           const result = await handler(payload);
 
-          // Si se configuró autoResponse, enviar respuesta automáticamente
+          // If autoResponse is configured, send response automatically
           if (autoResponse && correlationId) {
             await this.sendMessage(autoResponse.topic, result, correlationId);
           }

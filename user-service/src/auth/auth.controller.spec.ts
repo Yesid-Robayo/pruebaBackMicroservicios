@@ -9,6 +9,15 @@ describe('AuthController', () => {
     let authService: AuthService;
 
     beforeEach(async () => {
+        /**
+         * Creates a testing module for the AuthController with a mocked AuthService.
+         * 
+         * The testing module is configured with:
+         * - `controllers`: An array containing the `AuthController`.
+         * - `providers`: An array containing an object that provides the `AuthService` with a mocked `login` method using `jest.fn()`.
+         * 
+         * @returns {Promise<TestingModule>} A promise that resolves to the compiled testing module.
+         */
         const module: TestingModule = await Test.createTestingModule({
             controllers: [AuthController],
             providers: [

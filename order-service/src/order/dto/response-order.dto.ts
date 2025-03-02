@@ -1,6 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { OrderStatus } from "@prisma/client";
 
+/**
+ * Data Transfer Object for the response of an order.
+ */
 export class ResponseOrderDTO {
     @ApiProperty({
         example: 1,

@@ -1,6 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { Role } from "@prisma/client";
 
+/**
+ * UserResponseDto is a data transfer object (DTO) that defines the shape of the data
+ * that should be returned when fetching a user.
+ */
 export class UserResponseDto {
     @ApiProperty({
         description: 'User id',

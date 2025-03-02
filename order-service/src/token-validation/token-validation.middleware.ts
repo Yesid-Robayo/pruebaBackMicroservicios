@@ -2,6 +2,30 @@ import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/commo
 import { KafkaService } from 'src/kafka/kafka.service';
 import { Request, Response, NextFunction } from 'express';
 
+/**
+ * Middleware to validate the token from the request cookies.
+ * 
+ * @class TokenValidationMiddleware
+ * @implements {NestMiddleware}
+ * 
+ * @constructor
+ * @param {KafkaService} kafkaService - The Kafka service used to send and receive messages.
+ * 
+ * @method use
+ * @async
+ * @param {Request} req - The incoming request object.
+ * @param {Response} res - The outgoing response object.
+ * @param {NextFunction} next - The next middleware function in the stack.
+ * 
+ * @throws {UnauthorizedException} If the token is not present in the cookies.
+ * @throws {UnauthorizedException} If the user does not exist or there is an error validating the token.
+ * 
+ * @description
+ * This middleware checks for the presence of a token in the request cookies. If the token is not present,
+ * it throws an UnauthorizedException. It then sends the token to a Kafka topic to check if the user exists.
+ * If the user does not exist or there is an error during validation, it throws an UnauthorizedException.
+ * If the user exists, it calls the next middleware function in the stack.
+ */
 @Injectable()
 export class TokenValidationMiddleware implements NestMiddleware {
   constructor(private readonly kafkaService: KafkaService) { }

@@ -11,6 +11,12 @@ import { AuthService } from 'src/auth/auth.service';
 export class UserController {
     constructor(private readonly userService: UserService, private readonly authService: AuthService) { }
 
+    /**
+     * Creates a new user.
+     * @param createUserDto - The user data including name, email, password, and role.
+     * @param res - The response object used to send back the HTTP status and message.
+     * @returns A JSON response indicating whether the user was created successfully or an error occurred.
+     */
     @Post('createUser')
     @ApiOperation({ summary: 'Create user' })
     @ApiResponse({ status: 201, description: 'User created successfully' })
@@ -29,8 +35,14 @@ export class UserController {
             }
             return res.status(500).json({ code: 500, message: 'Internal server error' });
         }
-
     }
+
+    /**
+     * Retrieves information about the authenticated user.
+     * @param req - The request object containing user authentication details.
+     * @param res - The response object used to send back user data or an error response.
+     * @returns A JSON response containing user information if authenticated, otherwise an error response.
+     */
     @Get('me')
     @ApiOperation({ summary: 'User information' })
     @ApiResponse({ status: 200, description: 'User information retrieved successfully', type: UserResponseDto })
@@ -38,7 +50,6 @@ export class UserController {
     @ApiResponse({ status: 500, description: 'Internal server error' })
     async me(@Req() req: Request, @Res() res: Response) {
         try {
-
             const token = req.cookies.token;
 
             if (!token) {
@@ -55,10 +66,8 @@ export class UserController {
                 code: 200, data: user
             });
 
-
         } catch (err) {
             return res.status(500).json({ code: 500, message: 'Internal server error' });
         }
     }
-
 }

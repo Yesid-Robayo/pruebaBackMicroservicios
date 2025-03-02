@@ -10,6 +10,16 @@ describe('AuthService', () => {
     let userService: UserService;
 
     beforeEach(async () => {
+        /**
+         * Creates a testing module for the AuthService with mocked dependencies.
+         * 
+         * The testing module includes the following providers:
+         * - AuthService: The service being tested.
+         * - JwtService: A mock implementation of the JwtService with `sign` and `verify` methods mocked using Jest.
+         * - UserService: A mock implementation of the UserService with the `validateUser` method mocked using Jest.
+         * 
+         * @returns {Promise<TestingModule>} A promise that resolves to the compiled testing module.
+         */
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 AuthService,

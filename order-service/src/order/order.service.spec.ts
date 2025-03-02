@@ -11,6 +11,16 @@ describe('OrderService', () => {
     let kafkaService: KafkaService;
 
     beforeEach(async () => {
+        /**
+         * Creates a testing module for the OrderService with mocked dependencies.
+         * 
+         * The module includes the following providers:
+         * - `OrderService`: The service being tested.
+         * - `PrismaService`: Mocked Prisma service with `create`, `findMany`, and `update` methods.
+         * - `KafkaService`: Mocked Kafka service with a `sendAndReceive` method.
+         * 
+         * @returns {Promise<TestingModule>} A promise that resolves to the compiled testing module.
+         */
         const module: TestingModule = await Test.createTestingModule({
             providers: [
                 OrderService,

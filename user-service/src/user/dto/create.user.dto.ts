@@ -2,7 +2,10 @@ import { ApiProperty } from "@nestjs/swagger";
 import { Role } from "@prisma/client";
 import { IsEmail, IsNotEmpty } from "class-validator";
 
-
+/**
+ * CreateUserDto is a data transfer object (DTO) that defines the shape of the data
+ * that should be provided when creating a new user.
+ */
 export class CreateUserDto {
     @ApiProperty({
         description: 'The email of the user',

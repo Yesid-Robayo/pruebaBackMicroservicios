@@ -13,6 +13,16 @@ describe('UserController', () => {
   let authService: AuthService;
 
   beforeEach(async () => {
+    /**
+     * Creates a testing module for the UserController with mocked dependencies.
+     * 
+     * The module includes:
+     * - `UserController` as the controller to be tested.
+     * - `UserService` as a provider with mocked methods `createUser` and `findById`.
+     * - `AuthService` as a provider with a mocked method `verifyToken`.
+     * 
+     * @returns {Promise<TestingModule>} A promise that resolves to the compiled testing module.
+     */
     const module: TestingModule = await Test.createTestingModule({
       controllers: [UserController],
       providers: [

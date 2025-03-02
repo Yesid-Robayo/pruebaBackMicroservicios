@@ -3,6 +3,20 @@ import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+/**
+ * Initializes and starts the NestJS application.
+ * 
+ * - Enables CORS for cross-origin requests.
+ * - Sets up global validation pipes with whitelisting and transformation.
+ * - Uses cookie parser middleware.
+ * - Configures Swagger for API documentation with a title, description, version, and tag.
+ * - Starts the application on the specified port (default is 3000).
+ * - Logs the URL where the application is running.
+ * 
+ * @async
+ * @function bootstrap
+ * @returns {Promise<void>} A promise that resolves when the application has started.
+ */
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 

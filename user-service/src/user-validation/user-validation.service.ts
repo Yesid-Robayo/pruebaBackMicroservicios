@@ -11,6 +11,10 @@ export class UserValidationService implements OnModuleInit {
     private readonly authService: AuthService,
   ) { }
 
+  /**
+   * Initializes Kafka consumers for user validation upon module startup.
+   * Listens for requests to check if a user exists and whether a user is an admin.
+   */
   async onModuleInit() {
     await this.kafkaService.createConsumer(
       'check_user_exists',
@@ -18,7 +22,7 @@ export class UserValidationService implements OnModuleInit {
       async (payload) => {
         const { token } = payload;
         const userExists = await this.findUserByToken(token);
-        return { token, userExists: (userExists !== null)  };
+        return { token, userExists: (userExists !== null) };
       },
       { topic: 'token_validation_response' }
     );
@@ -35,6 +39,11 @@ export class UserValidationService implements OnModuleInit {
     );
   }
 
+  /**
+   * Finds a user based on the provided authentication token.
+   * @param token - The authentication token of the user.
+   * @returns The user data if found; otherwise, null.
+   */
   private async findUserByToken(token: string) {
     try {
       const payload = this.authService.verifyToken(token);
@@ -46,7 +55,4 @@ export class UserValidationService implements OnModuleInit {
       return null;
     }
   }
-
-
-
 }
