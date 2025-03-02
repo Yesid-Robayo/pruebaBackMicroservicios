@@ -100,4 +100,18 @@ export class UserService {
             createdAt: user.createdAt
         }
     }
+
+    async comproveRoleIdUser(id: number): Promise<boolean> {
+        const user = await this.prismaService.user.findUnique({
+            where: { id },
+        })
+        if (!user) {
+            throw new Error('User not found');
+        }
+        if (user.role === Role.USER) {
+            return true;
+        }
+        return false;
+
+    }
 }

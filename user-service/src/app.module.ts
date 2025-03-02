@@ -4,6 +4,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { UserModule } from './user/user.module';
 import { KafkaService } from './kafka/kafka.service';
+import { UserValidationService } from './user-validation/user-validation.service';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { KafkaService } from './kafka/kafka.service';
     AuthModule
   ],
   providers: [KafkaService,
-    PrismaModule
+    PrismaModule,
+    UserValidationService
   ],
 })
 export class AppModule { }

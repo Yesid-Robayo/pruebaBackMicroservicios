@@ -11,11 +11,10 @@ export class KafkaService implements OnModuleInit, OnModuleDestroy {
 
   constructor() {
     this.kafka = new Kafka({
-      clientId: process.env.KAFKA_CLIENT_ID || 'user-service',
+      clientId: process.env.KAFKA_CLIENT_ID || 'order-service',
       brokers: (process.env.KAFKA_BROKERS || 'localhost:9092').split(','),
       logLevel: logLevel.ERROR,
     });
-
     this.producer = this.kafka.producer();
   }
 

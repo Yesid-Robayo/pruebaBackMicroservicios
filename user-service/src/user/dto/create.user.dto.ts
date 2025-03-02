@@ -28,7 +28,7 @@ export class CreateUserDto {
 
     @ApiProperty({
         description: 'The  role of the user',
-        example: 'USER or ADMIN'
+        examples: ['USER', 'ADMIN']
     })
     @IsNotEmpty()
     role: Role;

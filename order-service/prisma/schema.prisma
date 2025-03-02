@@ -9,9 +9,7 @@ datasource db {
 
 model Order {
     id        Int      @id @default(autoincrement())
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-    status    String
+    status    OrderStatus
     total     Float
     userId    Int
     description String?

@@ -16,9 +16,10 @@ export class AuthService {
 
     }
 
+
     verifyToken(token: string) {
         try {
-            return this.jwtService.verify(token); // Si es válido, devuelve el payload
+            return this.jwtService.verify(token); 
         } catch (err) {
             if (err.name === 'TokenExpiredError') {
                 throw new Error('Token expired');
