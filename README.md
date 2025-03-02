@@ -19,7 +19,7 @@ El proyecto está dividido en dos microservicios principales:
    - Autenticación con JWT.
    - Obtener información del usuario autenticado.
 
-2. **Microservicio de Pedidos** ("Requiere iniciar sesion para usar toda la API"):
+2. **Microservicio de Pedidos** (Requiere iniciar sesion para usar toda la API):
    - Crear un pedido asociado a un usuario.
    - Listar los pedidos de un usuario.
    - Cambiar el estado de un pedido (pendiente, en proceso, completado) "Requiere autenticarse con rol ADMIN".
@@ -35,14 +35,17 @@ Además, el proyecto incluye:
 Sigue estos pasos para configurar y ejecutar el proyecto ya en produccion:
 
 1. **Clonar el repositorio**:
-   ``` git clone https://github.com/Yesid-Robayo/pruebaBackMicroservicios```
-   ``` cd pruebaBackMicroservicios```
+
+   ```bash
+   git clone https://github.com/Yesid-Robayo/pruebaBackMicroservicios
+   cd pruebaBackMicroservicios
 
 2. **Configurar variables de entorno**:
    No es necesario crear un archivo .env, ya que, para mayor comodidad, este ya está subido al proyecto.
 
 3. **Ejecutar Docker y ejecutar el comando para iniciar el proyecto**:
-   ``` docker-compose up -d```
+   ```bash
+    docker-compose up -d
 
 4. **Ejecutar Docker y ejecutar el comando para iniciar el proyecto**:
    
@@ -56,29 +59,32 @@ Si solo deseas ejecutar las pruebas unitarias del proyecto, sigue estos pasos:
 
 1. **Clonar el repositorio**:
    
-   ``` git clone https://github.com/Yesid-Robayo/pruebaBackMicroservicios```
-   ``` cd pruebaBackMicroservicios```
+   ```bash
+   git clone https://github.com/Yesid-Robayo/pruebaBackMicroservicios
+   cd pruebaBackMicroservicios
 
 2. **Instalar dependencias y generar prisma client**:
    
-   Order Service
+Order Service
 
-   ```cd order-service```
-   ```npm install```
-   ```npm run prisma:generate```
-   ```npm run prisma:migrate```
-   ```npm run test```
+     
+      cd order-service
+      npm install
+      npm run prisma:generate
+      npm run prisma:migrate
+      npm run test
 
-   User Service
+User Service
+    
+   
+      cd..
+      cd user-service
+      npm install
+      npm run prisma:generate
+      npm run prisma:migrate
+      npm run test
 
-   ```cd..```
-   ```cd user-service```
-   ```npm install```
-   ```npm run prisma:generate```
-   ```npm run prisma:migrate```
-   ```npm run test```
-
-   Al ejecutar las pruebas unitarias, la consola mostrará el proceso de ejecución y los resultados de cada prueba. Verás mensajes indicando qué pruebas fueron exitosas y si hubo fallos.
+Al ejecutar las pruebas unitarias, la consola mostrará el proceso de ejecución y los resultados de cada prueba. Verás mensajes indicando qué pruebas fueron exitosas y si hubo fallos.
 
    
 # Para Desarrollo
@@ -87,49 +93,53 @@ Si deseas seguir con el desarrollo del proyecto, sigue estos pasos:
 
 1. **Clonar el repositorio**:
    
-   ``` git clone https://github.com/Yesid-Robayo/pruebaBackMicroservicios```
-   ``` cd pruebaBackMicroservicios```
+   ```bash
+    git clone https://github.com/Yesid-Robayo/pruebaBackMicroservicios
+   cd pruebaBackMicroservicios
 
 2. **Instalar dependencias y generar prisma client**:
 
-   Order Service
+Order Service
 
-   ```cd order-service```
-   ```npm install```
-   ```npm run prisma:generate```
-   ```npm run prisma:migrate```
-   ```npm run start:dev```
+      
+      cd order-service
+      npm install
+      npm run prisma:generate
+      npm run prisma:migrate
+      npm run start:dev
 
-  User Service
+User Service
 
-   ```cd..```
-   ```cd user-service```
-   ```npm install```
-   ```npm run prisma:generate```
-   ```npm run prisma:migrate```
-   ```npm run start:dev```
+   
+      cd..
+      cd user-service
+      npm install
+      npm run prisma:generate
+      npm run prisma:migrate
+      npm run start:dev
 
     
-El servidor estará disponible en `http://localhost:3001` ( Microservicio User).
-El servidor estará disponible en `http://localhost:3002` ( Microservicio Order).
+El servidor estará disponible en [http://localhost:3001](http://localhost:3001) ( Microservicio User).
+
+El servidor estará disponible en [http://localhost:3002](http://localhost:3002) ( Microservicio Order).
 
 ## Documentación de la API
 
 La documentación de la API está generada con Swagger y puede accederse en:
 
-- **Swagger UI**: 
+**Swagger UI**: 
   
 - User Microservicio
-  `http://localhost:3001/api` 
+  [http://localhost:3001/api](http://localhost:3001/api) 
 - Order Microservicio
-  `http://localhost:3002/api` 
+  [http://localhost:3002/api](http://localhost:3002/api) 
 
-- **Documentación JSON**: 
+**Documentación JSON**: 
   
 - User Microservicio
-  `http://localhost:3001/api-json`
+  [http://localhost:3001/api-json](http://localhost:3001/api-json)
 - Order Microservicio
-  `http://localhost:3002/api-json`
+  [http://localhost:3002/api-json](http://localhost:3002/api-json)
 
 
 ## Endpoints Principales
