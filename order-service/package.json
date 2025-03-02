@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
    "scripts": {
     "build": "nest build",
-    "prismagenerate": "npx prisma generate",
+    "prisma:generate": "npx prisma generate",
     "prisma:migrate": "npx prisma migrate dev",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
