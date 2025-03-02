@@ -62,6 +62,7 @@ Si solo deseas ejecutar las pruebas unitarias del proyecto, sigue estos pasos:
    ```bash
    git clone https://github.com/Yesid-Robayo/pruebaBackMicroservicios
    cd pruebaBackMicroservicios
+   docker-compose up -d user-db order-db zookeeper kafka
 
 2. **Instalar dependencias y generar prisma client**:
    
@@ -96,6 +97,8 @@ Si deseas seguir con el desarrollo del proyecto, sigue estos pasos:
    ```bash
     git clone https://github.com/Yesid-Robayo/pruebaBackMicroservicios
    cd pruebaBackMicroservicios
+   docker-compose up -d user-db order-db zookeeper kafka
+
 
 2. **Instalar dependencias y generar prisma client**:
 
